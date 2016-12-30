@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://0xff00.com/"/>
-  <updated>2016-12-30T07:49:32.163Z</updated>
+  <updated>2016-12-30T09:12:22.313Z</updated>
   <id>http://0xff00.com/</id>
   
   <author>
@@ -14,6 +14,28 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>关于我</title>
+    <link href="http://0xff00.com/2016/12/30/about-me/"/>
+    <id>http://0xff00.com/2016/12/30/about-me/</id>
+    <published>2016-12-30T09:09:27.000Z</published>
+    <updated>2016-12-30T09:12:22.313Z</updated>
+    
+    <content type="html"><![CDATA[<p>不写程序的吉他手不是个老司机</p>
+<p>鸡猫: kenbinglee<br>微信：只加美妞</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;不写程序的吉他手不是个老司机&lt;/p&gt;
+&lt;p&gt;鸡猫: kenbinglee&lt;br&gt;微信：只加美妞&lt;/p&gt;
+
+    
+    </summary>
+    
+    
+  </entry>
   
   <entry>
     <title>Jekyll 迁移至 Hexo</title>
