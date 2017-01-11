@@ -61,7 +61,7 @@
     <link href="http://0xff00.com/2016/12/30/about-me/"/>
     <id>http://0xff00.com/2016/12/30/about-me/</id>
     <published>2016-12-30T09:09:27.000Z</published>
-    <updated>2016-12-31T09:23:17.703Z</updated>
+    <updated>2017-01-11T17:48:27.340Z</updated>
     
     <content type="html"><![CDATA[<p>不写程序的吉他手不是个老司机</p>
 <p>鸡猫: kenbinglee<br>微信: 只加美妞</p>
@@ -76,6 +76,8 @@
     </summary>
     
     
+      <category term="others" scheme="http://0xff00.com/tags/others/"/>
+    
   </entry>
   
   <entry>
@@ -83,7 +85,7 @@
     <link href="http://0xff00.com/2016/12/30/move-to-hexo/"/>
     <id>http://0xff00.com/2016/12/30/move-to-hexo/</id>
     <published>2016-12-30T07:48:09.000Z</published>
-    <updated>2016-12-30T07:49:32.163Z</updated>
+    <updated>2017-01-11T17:48:42.430Z</updated>
     
     <content type="html"><![CDATA[<p>无意发现 hexo 的作者是 95 年的，后生可畏…</p>
 ]]></content>
@@ -95,6 +97,8 @@
     
     </summary>
     
+    
+      <category term="others" scheme="http://0xff00.com/tags/others/"/>
     
   </entry>
   
