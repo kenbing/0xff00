@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://0xff00.com/"/>
-  <updated>2016-12-31T09:23:17.703Z</updated>
+  <updated>2017-01-11T16:49:24.520Z</updated>
   <id>http://0xff00.com/</id>
   
   <author>
@@ -14,6 +14,46 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>有用但不常用的git指令</title>
+    <link href="http://0xff00.com/2017/01/11/git-tips/"/>
+    <id>http://0xff00.com/2017/01/11/git-tips/</id>
+    <published>2017-01-11T15:26:24.000Z</published>
+    <updated>2017-01-11T16:49:24.520Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="暂存当前分支代码（不提交）"><a href="#暂存当前分支代码（不提交）" class="headerlink" title="暂存当前分支代码（不提交）"></a>暂存当前分支代码（不提交）</h2><p><em>场景：当你在开发分支工作，突然收到一个线上故障，需要立刻新建一个 hotfix 分支去修复，但是<br>开发分支的代码才写了一半，你不希望提交，但是强制切去 hotfix 分支会丢失当前的代码。</em></p>
+<p>把工作目录的修改暂存起来</p>
+<pre><code>git stash
+</code></pre><p>当你处理完故障切换回原来分支继续干活，恢复刚刚上一次暂存的记录</p>
+<pre><code>git stash apply # 恢复
+git stash pop # 恢复并从暂存区删除记录
+</code></pre><p>查看暂存列表</p>
+<pre><code>git stash list
+</code></pre><p>恢复指定第2暂存记录</p>
+<pre><code>git stash apply stash@{2}
+</code></pre><h2 id="删除远程仓库的错误提交"><a href="#删除远程仓库的错误提交" class="headerlink" title="删除远程仓库的错误提交"></a>删除远程仓库的错误提交</h2><p><em>场景：当你手贱把一个未经测试的 commit 直接 push 到远程仓库，别人只要在你这个分支下 pull<br>了代码，那就挂了。</em></p>
+<p>先删除本地错误的提交</p>
+<pre><code>git reset --hard HEAD~1
+</code></pre><p>再提交到远程仓库</p>
+<pre><code>git push origin yourbranch --force
+</code></pre><p>需要注意的是，当存在多人对 yourbranch 同时进行开发的时候，以上这个 –force 操作可能会覆<br>盖掉其他人的提交记录</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;暂存当前分支代码（不提交）&quot;&gt;&lt;a href=&quot;#暂存当前分支代码（不提交）&quot; class=&quot;headerlink&quot; title=&quot;暂存当前分支代码（不提交）&quot;&gt;&lt;/a&gt;暂存当前分支代码（不提交）&lt;/h2&gt;&lt;p&gt;&lt;em&gt;场景：当你在开发分支工作，突然收到一个线上故
+    
+    </summary>
+    
+    
+      <category term="git" scheme="http://0xff00.com/tags/git/"/>
+    
+      <category term="tool" scheme="http://0xff00.com/tags/tool/"/>
+    
+      <category term="cs" scheme="http://0xff00.com/tags/cs/"/>
+    
+  </entry>
   
   <entry>
     <title>关于我</title>
