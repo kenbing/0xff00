@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://0xff00.com/2017/01/11/git-tips/</loc>
+    
+    <lastmod>2017-01-11T17:20:20.780Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://0xff00.com/2016/12/30/about-me/</loc>
     
     <lastmod>2016-12-31T09:23:17.703Z</lastmod>
@@ -9,7 +16,7 @@
   </url>
   
   <url>
-    <loc>http://0xff00.com/2016/12/30/move%20to%20hexo/</loc>
+    <loc>http://0xff00.com/2016/12/30/move-to-hexo/</loc>
     
     <lastmod>2016-12-30T07:49:32.163Z</lastmod>
     
