@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://0xff00.com/"/>
-  <updated>2017-01-12T13:39:17.466Z</updated>
+  <updated>2017-01-12T16:07:39.243Z</updated>
   <id>http://0xff00.com/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://0xff00.com/2017/01/11/git-tips/"/>
     <id>http://0xff00.com/2017/01/11/git-tips/</id>
     <published>2017-01-11T15:26:24.000Z</published>
-    <updated>2017-01-12T13:39:17.466Z</updated>
+    <updated>2017-01-12T16:07:39.243Z</updated>
     
     <content type="html"><![CDATA[<h2 id="暂存当前分支代码（不提交）"><a href="#暂存当前分支代码（不提交）" class="headerlink" title="暂存当前分支代码（不提交）"></a>暂存当前分支代码（不提交）</h2><p><em>场景：当你在开发分支工作，突然收到一个线上故障，需要立刻新建一个 hotfix 分支去修复，但是<br>开发分支的代码才写了一半，你不希望提交，但是强制切去 hotfix 分支又会丢失当前的代码。</em></p>
 <p>这时候可以把工作目录的修改暂存起来</p>
@@ -33,7 +33,7 @@
 <pre><code>git stash list
 </code></pre><p>恢复指定第2个暂存记录</p>
 <pre><code>git stash apply stash@{2}
-</code></pre><h2 id="清空工作目录的修改"><a href="#清空工作目录的修改" class="headerlink" title="清空工作目录的修改"></a>清空工作目录的修改</h2><p><em>场景：当你在工作目录做一些修改，由于不满意或需求变更，需要全部丢弃</em></p>
+</code></pre><h2 id="清空工作目录的修改"><a href="#清空工作目录的修改" class="headerlink" title="清空工作目录的修改"></a>清空工作目录的修改</h2><p><em>场景：当你在工作目录做一些修改，由于不满意或需求变更，需要全部丢弃。</em></p>
 <p>只需要一个指令就能清空工作目录所有修改</p>
 <pre><code>git reset --hard 最近一个commitid
 </code></pre><h2 id="删除远程仓库的错误提交"><a href="#删除远程仓库的错误提交" class="headerlink" title="删除远程仓库的错误提交"></a>删除远程仓库的错误提交</h2><p><em>场景：当你手贱把一个未经测试的 commit 直接 push 到远程仓库，别人只要在你这个分支下 pull<br>了代码，那就挂了。</em></p>
