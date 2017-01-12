@@ -9,10 +9,13 @@
 <pre><code>git stash list
 </code></pre><p>恢复指定第2个暂存记录</p>
 <pre><code>git stash apply stash@{2}
+</code></pre><h2 id="清空工作目录的修改"><a href="#清空工作目录的修改" class="headerlink" title="清空工作目录的修改"></a>清空工作目录的修改</h2><p><em>场景：当你在工作目录做一些修改，由于不满意或需求变更，需要全部丢弃</em></p>
+<p>只需要一个指令就能清空工作目录所有修改</p>
+<pre><code>git reset --hard 最近一个commitid
 </code></pre><h2 id="删除远程仓库的错误提交"><a href="#删除远程仓库的错误提交" class="headerlink" title="删除远程仓库的错误提交"></a>删除远程仓库的错误提交</h2><p><em>场景：当你手贱把一个未经测试的 commit 直接 push 到远程仓库，别人只要在你这个分支下 pull<br>了代码，那就挂了。</em></p>
 <p>先删除本地错误的提交</p>
 <pre><code>git reset --hard HEAD~1
 </code></pre><p>再提交到远程仓库</p>
 <pre><code>git push origin yourbranch --force
 </code></pre><p>需要注意的是，当存在多人对 yourbranch 同时进行开发的时候，以上这个 –force 操作可能会覆<br>盖掉其他人的提交记录</p>
-</div></article></div></main><footer><div class="paginator"><a href="/2016/12/30/about-me/" class="next">下一篇</a></div><div class="copyright"><p>© 2015 - 2017 <a href="http://0xff00.com">kenbing</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-65933410-1",'auto');ga('send','pageview');</script></body></html>
+</div></article></div></main><footer><div class="paginator"><a href="/2016/12/30/about-me/" class="next">NEXT</a></div><div class="copyright"><p>© 2015 - 2017 <a href="http://0xff00.com">kenbing</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-65933410-1",'auto');ga('send','pageview');</script></body></html>
