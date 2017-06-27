@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://0xff00.com/"/>
-  <updated>2017-06-27T05:44:51.604Z</updated>
+  <updated>2017-06-27T05:49:20.594Z</updated>
   <id>http://0xff00.com/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://0xff00.com/2017/06/26/CAP/"/>
     <id>http://0xff00.com/2017/06/26/CAP/</id>
     <published>2017-06-26T14:59:59.000Z</published>
-    <updated>2017-06-27T05:44:51.604Z</updated>
+    <updated>2017-06-27T05:49:20.594Z</updated>
     
     <content type="html"><![CDATA[<h1 id="分布式系统定义"><a href="#分布式系统定义" class="headerlink" title="分布式系统定义"></a>分布式系统定义</h1><p>分布式是个很广泛的话题，从我十年前我刚上大学到现在，伴随着大数据及云服务，一直保持着热度，先来看看分布式系统的定义，摘自《分布式系统概念与设计》。</p>
 <blockquote>
@@ -95,7 +95,7 @@
 <li>Eventually 最终一致性：当你写入一个新值后，有可能读不出来，但在某个时间窗口之后保证最终能读出来。比如：DNS，电子邮件、Amazon S3，Google 搜索引擎这样的系统。</li>
 <li>Strong 强一致性：新的数据一旦写入，在任意副本任意时刻都能读到新值。比如：文件系统，RDBMS，Azure Table 都是强一致性的。</li>
 </ol>
-<p>从这三种一致型的模型上来说，我们可以看到，Weak 和 Eventually 一般来说是异步冗余的，而 Strong<br>一般来说是同步冗余的，异步的通常意味着更好的性能，但也意味着更复杂的状态控制。同步意味着简单，<br>但也意味着性能下降。现在让我们由浅入深，一步一步地来看有哪些策略：</p>
+<p>从这三种一致型的模型上来说，我们可以看到，Weak 和 Eventually 一般来说是异步冗余的，而 Strong 一般来说是同步冗余的，异步的通常意味着更好的性能，但也意味着更复杂的状态控制。同步意味着简单，但也意味着性能下降。现在让我们由浅入深，一步一步地来看有哪些策略：</p>
 <h2 id="Master-Slave"><a href="#Master-Slave" class="headerlink" title="Master-Slave"></a>Master-Slave</h2><h2 id="Master-Master"><a href="#Master-Master" class="headerlink" title="Master-Master"></a>Master-Master</h2><h2 id="2PC-3PC"><a href="#2PC-3PC" class="headerlink" title="2PC/3PC"></a>2PC/3PC</h2><h2 id="Two-Generals-Problem"><a href="#Two-Generals-Problem" class="headerlink" title="Two Generals Problem"></a>Two Generals Problem</h2><h2 id="Paxos-Raft"><a href="#Paxos-Raft" class="headerlink" title="Paxos/Raft"></a>Paxos/Raft</h2><p><img src="stragety_of_consistency.jpg" alt="stragety of consistency"></p>
 <p>前面说过，要想让数据有高可用性，就需要冗余数据写多份。写多份的问题会带来一致性的问题，而一致性的问题又会带来性能问题。从上图我们可以看到，我们基本上来说不可以让所有的项都绿起来，这就是著名的CAP理论：一致性，可用性，分区容忍性，你只可能要其中的两个。</p>
 <h1 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h1><p>至此，一切还是遵循着 CAP 理论，但是，据说，Google 新发布的 Spanner 关系型 NoSQL 已经打破了 CAP，欲知详情，且听下回分解，或者，你现在就可以 google 一下。</p>
