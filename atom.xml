@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://0xff00.com/"/>
-  <updated>2017-07-05T07:48:11.781Z</updated>
+  <updated>2017-09-07T10:36:45.541Z</updated>
   <id>http://0xff00.com/</id>
   
   <author>
@@ -16,13 +16,30 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>幂等提交</title>
+    <link href="http://0xff00.com/2017/09/07/idempotence-submit/"/>
+    <id>http://0xff00.com/2017/09/07/idempotence-submit/</id>
+    <published>2017-09-07T07:49:54.000Z</published>
+    <updated>2017-09-07T10:36:45.541Z</updated>
+    
+    <summary type="html">
+    
+    </summary>
+    
+    
+      <category term="idempotence" scheme="http://0xff00.com/tags/idempotence/"/>
+    
+  </entry>
+  
+  <entry>
     <title>被浏览器缓存策略折腾的一天</title>
     <link href="http://0xff00.com/2017/07/05/browser-cache/"/>
     <id>http://0xff00.com/2017/07/05/browser-cache/</id>
     <published>2017-07-05T07:34:13.000Z</published>
-    <updated>2017-07-05T07:48:11.781Z</updated>
+    <updated>2017-09-07T07:49:10.741Z</updated>
     
     <content type="html"><![CDATA[<h1 id="故事背景…"><a href="#故事背景…" class="headerlink" title="故事背景…"></a>故事背景…</h1><p>昨天，遇到 facebook CDN 图片一个缓存策略问题，发现自己 HTTP 缓存的相关知识都忘差不多了，必须整理一下，好，整理完再看那个问题，卧槽，缓存行为完全跟规范说的不一样，求知心强烈的我陷入了 Block 模式，开始折腾这一奇怪的现象。</p>
+<p>@Todo</p>
 ]]></content>
     
     <summary type="html">
@@ -43,9 +60,19 @@
     <link href="http://0xff00.com/2017/06/26/CAP/"/>
     <id>http://0xff00.com/2017/06/26/CAP/</id>
     <published>2017-06-26T14:59:59.000Z</published>
-    <updated>2017-07-13T10:01:56.557Z</updated>
+    <updated>2017-09-07T10:34:42.951Z</updated>
     
-    <content type="html"><![CDATA[<h1 id="分布式系统定义"><a href="#分布式系统定义" class="headerlink" title="分布式系统定义"></a>分布式系统定义</h1><p>分布式是个很广泛的话题，从我十年前我刚上大学到现在，伴随着大数据及云服务，一直保持着热度，先来看看分布式系统的定义，摘自《分布式系统概念与设计》。</p>
+    <content type="html"><![CDATA[<h1 id="分布式系统定义"><a href="#分布式系统定义" class="headerlink" title="分布式系统定义"></a>分布式系统定义</h1><p>想象有这样一台计算机：</p>
+<ol>
+<li>极其高速的CPU</li>
+<li>极其宽大的总线</li>
+<li>极其大容量的内存</li>
+<li>极其大带宽的网卡</li>
+<li>极其稳定的组合在一起</li>
+<li>再连接上一条及其稳定的线路</li>
+</ol>
+<p>我觉得即使再贵，买这样一台单机处理能力极其强劲的服务器就可以满足大多数应用场景，可是没有，所以才有了分布式。</p>
+<p>分布式是个很广泛的话题，从我十年前我刚上大学到现在，伴随着大数据及云服务，一直保持着热度，先来看看分布式系统的定义，摘自《分布式系统概念与设计》。</p>
 <blockquote>
 <p>分布式系统是一个硬件或软件组件分布在<strong>不同的网络计算机</strong>上，彼此之间仅仅通过<strong>消息传递</strong>进行通信和协调的系统。</p>
 </blockquote>
@@ -135,7 +162,10 @@
     
     <summary type="html">
     
-      &lt;h1 id=&quot;分布式系统定义&quot;&gt;&lt;a href=&quot;#分布式系统定义&quot; class=&quot;headerlink&quot; title=&quot;分布式系统定义&quot;&gt;&lt;/a&gt;分布式系统定义&lt;/h1&gt;&lt;p&gt;分布式是个很广泛的话题，从我十年前我刚上大学到现在，伴随着大数据及云服务，一直保持着热度，先来看看分
+      &lt;h1 id=&quot;分布式系统定义&quot;&gt;&lt;a href=&quot;#分布式系统定义&quot; class=&quot;headerlink&quot; title=&quot;分布式系统定义&quot;&gt;&lt;/a&gt;分布式系统定义&lt;/h1&gt;&lt;p&gt;想象有这样一台计算机：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;极其高速的CPU&lt;/li&gt;
+&lt;li&gt;极其宽大的总线
     
     </summary>
     
