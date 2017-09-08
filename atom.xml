@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://0xff00.com/"/>
-  <updated>2017-09-07T10:36:45.541Z</updated>
+  <updated>2017-09-08T10:21:06.608Z</updated>
   <id>http://0xff00.com/</id>
   
   <author>
@@ -20,9 +20,65 @@
     <link href="http://0xff00.com/2017/09/07/idempotence-submit/"/>
     <id>http://0xff00.com/2017/09/07/idempotence-submit/</id>
     <published>2017-09-07T07:49:54.000Z</published>
-    <updated>2017-09-07T10:36:45.541Z</updated>
+    <updated>2017-09-08T10:21:06.608Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>在业务开发中，我们常会面对防止重复请求的问题。当服务端对于请求的响应涉及数据的修改，或状态的变更时，可能会造成极大的危害。特别是交易系统，售后维权，以及支付系统中尤其严重。前台操作的抖动，快速操作，网络通信或者后端响应慢，都会增加后端重复处理的概率。</p>
+<p>当然，前端能屏蔽掉重复请求（真的可以吗？前端同学回答下）你也无法逃避 timeout 这个噩梦，所以，既然重复提交无法避免，那我们就从其他地方入手，先看下一些简单的需求场景：</p>
+<ol>
+<li>前端重复提交选中的数据，应该后台只产生对应这个数据的一个反应结果；</li>
+<li>我们发起一笔付款请求，应该只扣用户账户一次钱，当遇到网络重发或系统bug重发，也应该只扣一次钱；</li>
+<li>发送消息，也应该只发一次，同样的短信发给用户，用户会哭的；</li>
+</ol>
+<p>既然调用方不靠谱，网络不靠谱，那么接口提供方就必须靠谱，允许你多次调用，我的接口都能handle，这种能力就叫幂等性。</p>
+<h2 id="幂等接口"><a href="#幂等接口" class="headerlink" title="幂等接口"></a>幂等接口</h2><p>幂等是一个数学概念（摘自维基百科）</p>
+<blockquote>
+<ul>
+<li>在某二元运算下，幂等元素是指被自己重复运算(或对于函数是为复合)的结果等于它自己的元素。例如，乘法下唯一两个幂等实数为0和1。</li>
+<li>某一元运算为幂等的时，其作用在任一元素两次后会和其作用一次的结果相同。例如，高斯符号便是幂等的。</li>
+<li>一元运算的定义是二元运算定义的特例。</li>
+</ul>
+</blockquote>
+<p>相应地，在计算机领域，如果一个接口一次调用或多次调用的结果是一样的，那么这个接口就是幂等的。但是我没看到一个很严谨的解释，毕竟是延伸过来的说法。</p>
+<p>所以还是列举下一些常见的幂等接口：</p>
+<ol>
+<li>HTTP GET</li>
+<li>SQL SELECT</li>
+<li>大家补充…</li>
+</ol>
+<p>不是幂等的接口</p>
+<ol>
+<li>HTTP POST</li>
+<li>SQL UPDATE</li>
+<li>大家补充…</li>
+</ol>
+<p>从这些简单的例子，我大胆归结下<strong>计算机领域</strong>的<strong>幂等性</strong>是：</p>
+<ol>
+<li>一次调用或多次调用对系统影响是一样的</li>
+<li>接口返回的结果也是一样的（不受接口调用之外的影响）</li>
+</ol>
+<p>好了，说完接口的幂等性，它能防止重复提交，接下来讲讲一些经典的实现方案及适用场景。</p>
+<h2 id="token校验"><a href="#token校验" class="headerlink" title="token校验"></a>token校验</h2><p>由 server 产生，并且存一份，再埋在form/cookies/header;<br>client 下次请求带上 token, server 校验通过后刷新 token，执行业务；</p>
+<p>优点：client 改动很小甚至不需要改动<br>缺点：无法支持 client 并发请求<br>其他讨论：server如何存储token/如果用缓存如何设置key</p>
+<h2 id="唯一索引"><a href="#唯一索引" class="headerlink" title="唯一索引"></a>唯一索引</h2><p>通过把并发问题变成串行问题，如何实现很简单</p>
+<ol>
+<li>数据库去重表</li>
+<li>redis 原子性</li>
+<li>MQ</li>
+</ol>
+<h2 id="加锁"><a href="#加锁" class="headerlink" title="加锁"></a>加锁</h2><p><em>乐观锁</em><br><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">update</span> table_xxx <span class="keyword">set</span> <span class="keyword">col</span>=col_xxx, ver=ver+<span class="number">1</span> <span class="keyword">where</span> ver=ver</div></pre></td></tr></table></figure></p>
+<p><em>悲观锁</em><br><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">select</span> * <span class="keyword">from</span> table_xxx <span class="keyword">where</span> <span class="keyword">id</span> = id_xxx <span class="keyword">for</span> <span class="keyword">update</span></div></pre></td></tr></table></figure></p>
+<p>具体哪种看业务对更新成本及更新频率的考量。</p>
+<h2 id="状态机幂等"><a href="#状态机幂等" class="headerlink" title="状态机幂等"></a>状态机幂等</h2><p>当业务涉及到多个状态更改，如下单支付，广告创建，可以给每一步递增标记，只允许提交大于当前标记的请求，然后每一步的幂等由上诉几种方案实现。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
+<li>防止重复提交跟保障一致性相似，要看场景，没必要强求。</li>
+<li>幂等性应该列入程序员必备知识，特别是做 web 开发的程序员。</li>
+</ul>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="http://www.hollischuang.com/archives/934" target="_blank" rel="external">深入理解乐观锁与悲观锁</a><br><a href="http://825635381.iteye.com/blog/2276077" target="_blank" rel="external">高并发的核心技术-幂等的实现方案</a><br><a href="http://yongpoliu.com/idempotent/" target="_blank" rel="external">系统幂等以及常用实现方式</a><br><a href="http://mogu.io/prevent-duplicate-requests-4/comment-page-1#comments" target="_blank" rel="external">防重复请求处理的实践与总结</a><br><a href="https://www.zhihu.com/question/27744795" target="_blank" rel="external">分布式高并发系统如何保证对外接口的幂等性</a><br><a href="http://geyifan.cn/2016/06/02/idempotent-solutions/" target="_blank" rel="external">幂等策略分析</a></p>
+]]></content>
     
     <summary type="html">
+    
+      &lt;h2 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot; title=&quot;背景&quot;&gt;&lt;/a&gt;背景&lt;/h2&gt;&lt;p&gt;在业务开发中，我们常会面对防止重复请求的问题。当服务端对于请求的响应涉及数据的修改，或状态的变更时，可能会造成极大的危害。特别是交易系统，售
     
     </summary>
     
