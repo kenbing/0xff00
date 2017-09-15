@@ -2,9 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://0xff00.com/2017/09/15/hyperloglog/</loc>
+    
+    <lastmod>2017-09-15T10:18:17.604Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://0xff00.com/2017/09/07/idempotence-submit/</loc>
     
-    <lastmod>2017-09-11T10:26:09.778Z</lastmod>
+    <lastmod>2017-09-12T02:30:35.030Z</lastmod>
     
   </url>
   
