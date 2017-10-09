@@ -1,0 +1,28 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> Linux 启动流程（上篇） · 0xff00</title><meta name="description" content="Linux 启动流程（上篇） - kenbing"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://0xff00.com/atom.xml" title="0xff00"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="http://0xff00.com/2016/12/30/about-me/" target="_blank" class="nav-list-link">ABOUT</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">Linux 启动流程（上篇）</h1><div class="post-info">Oct 9, 2017</div><div class="post-content"><h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>继 TAB VS SPACE，VIM VS EMACS 等程序员的圣战后，最近又接触了一场新的圣战：systemd VS sysvinit</p>
+<p>讲的是 Linux 如何启动第一个程序(PID:1)， 本想先说下这一段历史渊源，发现有必要先讲下计算机是如何 boot 起来，所以本篇是个姐妹篇，我们先来聊聊计算机是如何启动的，下篇再来回顾这场圣战！</p>
+<h1 id="启动顺序"><a href="#启动顺序" class="headerlink" title="启动顺序"></a>启动顺序</h1><p>这个启动顺序是每次开机都会看到的，不管是 Linux 还是 Windows：</p>
+<p><img src="http://7xjdax.com1.z0.glb.clouddn.com/blogfigure1.gif" alt="boot-sequence"></p>
+<h1 id="BIOS"><a href="#BIOS" class="headerlink" title="BIOS"></a>BIOS</h1><p>首先当你按下 power 键，主机通电了，第一个相应的器件是什么呢？（别说是电源或风扇…）答案是这块东西！</p>
+<p><img src="http://www.bcwork.cn/uploadfile/201105/1/7F83244225.jpg" alt="bios-chips"></p>
+<p>他是一块 ROM，由主板厂商焊死在板上，存放着开机来第一个系统：基本输入输出系统！Basic Input Output System！！BIOS！！！</p>
+<p>所以 BIOS 到底干嘛的？？？说白它就干两件事</p>
+<ol>
+<li>检查硬件能否满足运行的基本条件（CPU, 内存, 硬盘…）</li>
+<li>if not OK，主板会发出不同含义的蜂鸣，启动中止</li>
+<li>if OK，屏幕就会显示出CPU、内存、硬盘等信息，并把控制权转交给下一阶段的启动程序</li>
+</ol>
+<h1 id="MBR"><a href="#MBR" class="headerlink" title="MBR"></a>MBR</h1><p>下一阶段的启动程序，那他肯定不是放在 CPU（计算单元），内存（易失性存储器），所以只能是非易失性存储器里了，那可以是 U盘，光碟，或者通常的硬盘（听到硬盘通常都会稍微硬一下以示敬意）这里拿最便宜的机械硬盘来说。</p>
+<p>硬盘这么大，哪去找“下一阶段的启动程序”，既然上一步 BIOS 没对 CPU 说，那就只能拿第一个能拿到的区域，就机械硬盘而言，就是第一个扇区了，也就是最开始的 512 个字节，但并不是每一个硬盘的第一个扇区都能启动，它必须是以 0x55, 0xAA 这两个字节结尾的扇区才可以，我们把这种特殊的扇区叫做“主引导记录”！Master Boot Record！！MBR！！！</p>
+<p>MBR 只有512个字节，放不了太多东西。它的主要作用是，<strong>告诉计算机到硬盘的哪一个位置去找操作系统！</strong></p>
+<p><img src="http://7xjdax.com1.z0.glb.clouddn.com/blogfigure2.gif" alt="mbr"></p>
+<p>上图可见一个硬盘只能分为4个分区，并且必须有且只有一个主分区！叫做”卷引导记录”！Volume boot record！！VBR！！！</p>
+<p>但随着有些人喜欢分（系统，学习，工作，音乐，电影，图片，备份1，备份2…）等超过4个分区，MBR 已经满足不了了，所以后来规定了有且只有一个分区设置为“扩展引导记录”！Extended boot record！！EBR！！！（又来一个，我快记不住了）</p>
+<p>EBR 包含一张64字节的分区表，但是最多只有两项（也就是两个逻辑分区）。<br>计算机接着读取第二个逻辑分区的第一个扇区，再从里面的分区表中找到第三个逻辑分区的位置，以此类推，直到某个逻辑分区的分区表只包含它自身为止（即只有一个分区项），因此，扩展分区可以包含无数个逻辑分区，到此，PROBLEMS SOLVED！</p>
+<p>但是，现在没人这么用了，这段为何不用这两种启动方式的历史我懒得去找，反正我从小就是用以下即将要讲的方式！！！</p>
+<h1 id="GRUB"><a href="#GRUB" class="headerlink" title="GRUB"></a>GRUB</h1><p>这种方式就是，计算机读取”主引导记录”前面446字节的机器码之后，不再把控制权转交给某一个分区，而是运行事先安装的”启动管理器”（boot loader），由用户选择启动哪一个操作系统，Linux环境中，目前最流行的启动管理器是GRUB:</p>
+<p><img src="http://www.supergrubdisk.org/wp-content/uploads/2013/11/rescatux_wizard_grub_menu.png" alt="grub"></p>
+<p>由用户选择进入哪一个操做系统</p>
+<h1 id="Linux-Kernel"><a href="#Linux-Kernel" class="headerlink" title="Linux Kernel"></a>Linux Kernel</h1><p>至此，控制权转交给操作系统后，操作系统的内核首先被载入内存，以Linux系统为例，先载入/boot目录下面的kernel，内核加载完成后，讲启动系统第一个进程（pid:1），其他进程都是它的后代。</p>
+<h1 id="init（圣战战场）"><a href="#init（圣战战场）" class="headerlink" title="init（圣战战场）"></a>init（圣战战场）</h1><p>且听下回分解</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="http://huaqianlee.github.io/2015/08/21/Linux/深入理解Linux启动过程" title="深入理解Linux启动过程" target="_blank" rel="external">http://huaqianlee.github.io/2015/08/21/Linux/深入理解Linux启动过程 /</a><br><a href="http://www.ruanyifeng.com/blog/2013/08/linux_boot_process.html" title="linux_boot_process" target="_blank" rel="external">http://www.ruanyifeng.com/blog/2013/08/linux_boot_process.html</a></p>
+</div></article></div></main><footer><div class="paginator"><a href="/2017/09/15/hyperloglog/" class="next">NEXT</a></div><div class="copyright"><p>© 2015 - 2017 <a href="http://0xff00.com">kenbing</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-65933410-1",'auto');ga('send','pageview');</script></body></html>
