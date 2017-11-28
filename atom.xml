@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://0xff00.com/"/>
-  <updated>2017-10-09T02:49:10.417Z</updated>
+  <updated>2017-11-28T15:54:01.363Z</updated>
   <id>http://0xff00.com/</id>
   
   <author>
@@ -14,6 +14,68 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>linux startup 2</title>
+    <link href="http://0xff00.com/2017/11/28/linux-startup-2/"/>
+    <id>http://0xff00.com/2017/11/28/linux-startup-2/</id>
+    <published>2017-11-28T15:54:01.000Z</published>
+    <updated>2017-11-28T15:54:01.363Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="PID-1"><a href="#PID-1" class="headerlink" title="PID 1"></a>PID 1</h1><p>上篇说到加载完 kernel 后会 init 用户态第一个进程，PID 1，又叫超级进程，也叫根进程，它负责产生其他所有用户进程。所有的进程都会被挂在这个进程下，如果这个进程退出了，那么所有的进程都被 kill 。如果一个子进程的父进程退了，那么这个子进程会被挂到 PID 1 下面。</p>
+<p>下面我们就来说说 PID 1历史上是如何启动的。</p>
+<h1 id="回溯历史"><a href="#回溯历史" class="headerlink" title="回溯历史"></a>回溯历史</h1><h2 id="SysV-Init"><a href="#SysV-Init" class="headerlink" title="SysV Init"></a>SysV Init</h2><ol>
+<li>产生于命令行时代</li>
+<li>串行启动进程</li>
+<li>一次性全部启动</li>
+</ol>
+<h2 id="Upstart"><a href="#Upstart" class="headerlink" title="Upstart"></a>Upstart</h2><ol>
+<li>为了解决桌面时代热插拔的问题</li>
+<li>基于事件驱动</li>
+<li>Job/Event 的设计</li>
+</ol>
+<h2 id="Systemd"><a href="#Systemd" class="headerlink" title="Systemd"></a>Systemd</h2><ol>
+<li>为了解决不够快的问题</li>
+<li>按需启动</li>
+<li>并行启动</li>
+</ol>
+<h3 id="如何做到快？"><a href="#如何做到快？" class="headerlink" title="如何做到快？"></a>如何做到快？</h3><ol>
+<li>处理了Socket/D-bus/fs之间的依赖</li>
+<li>用纯C语言代替了Shell启动脚本</li>
+</ol>
+<h3 id="三者启动蓝牙程序的对比"><a href="#三者启动蓝牙程序的对比" class="headerlink" title="三者启动蓝牙程序的对比"></a>三者启动蓝牙程序的对比</h3><p><img src="https://coolshell.cn/wp-content/uploads/2017/07/boot.png" alt="compare"></p>
+<h3 id="除此之外"><a href="#除此之外" class="headerlink" title="除此之外"></a>除此之外</h3><ol>
+<li>可以跟踪上服务进程所fork/exec出来的所有进程</li>
+<li>简化了整个 daemon 开发的过程</li>
+<li>自动检测启动的服务间有没有环形依赖</li>
+<li>内建 autofs 自动挂载管理功能</li>
+<li>改造了传统的 syslog 的问题，采用二进制格式保存日志，日志索引更快</li>
+<li>快照和恢复。对当前的系统运行的服务集合做快照，并可以恢复</li>
+<li>……</li>
+</ol>
+<p>这时候有谁出来喊了，Systemd 干了很多本不该他管的事情，于是开始有人抵制并抗议这种做法。</p>
+<h1 id="圣战打响"><a href="#圣战打响" class="headerlink" title="圣战打响"></a>圣战打响</h1><h2 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h2><p>Systemd 的优点是功能强大，使用方便，缺点是体系庞大，非常复杂。事实上，现在还有很多人反对使用 Systemd，理由就是它过于复杂，与操作系统的其他部分强耦合，违反”keep simple, keep stupi d”的<a href="http://www.ruanyifeng.com/blog/2009/06/unix_philosophy.html" target="_blank" rel="external">Unix 哲学</a>。</p>
+<p><img src="http://www.ruanyifeng.com/blogimg/asset/2016/bg2016030703.png" alt="arch"></p>
+<h2 id="发展"><a href="#发展" class="headerlink" title="发展"></a>发展</h2><p>起初 Systemd 的作者 Lennart 写了篇<a href="http://0pointer.de/blog/projects/the-biggest-myths.html" target="_blank" rel="external">文章</a>解释大众对 Systemd 的误解，但丝毫不起作用，并且在网络上招受到大量的语言暴力，甚至收到死亡威胁邮件。</p>
+<p>于是 Lennart 写了篇<a href="https://plus.google.com/+LennartPoetteringTheOneAndOnly/posts/J2TZrTvu7vd" target="_blank" rel="external">帖子</a>来抨击 Linux 社区及 Linus 本人，说 Linus 领导的 Linux 组织已经是一个彻头彻尾的邪教。</p>
+<p>随后，Linus 在有一次采访中也对此发表了自己的看法，大意如下图。</p>
+<p><img src="https://cdn.arstechnica.net/wp-content/uploads/2013/02/linus-eff-you-640x363.png" alt="fuck"></p>
+<h2 id="结果"><a href="#结果" class="headerlink" title="结果"></a>结果</h2><p>目前几乎所有Linux发行版都用 Systemd 来启动及管理进程。</p>
+<h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h1><h3 id="systemdt-的-pstree"><a href="#systemdt-的-pstree" class="headerlink" title="systemdt 的 pstree"></a>systemdt 的 pstree</h3><p><img src="https://www.daehub.com/wp-content/uploads/2016/12/pstree-result.jpg" alt="systemd"></p>
+<h3 id="init-的-pstree"><a href="#init-的-pstree" class="headerlink" title="init 的 pstree"></a>init 的 pstree</h3><p><img src="http://images2017.cnblogs.com/blog/1102349/201707/1102349-20170727195008415-1871371589.png" alt="init"></p>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><p><a href="https://coolshell.cn/articles/17998.html" target="_blank" rel="external">https://coolshell.cn/articles/17998.html</a><br><a href="http://www.ruanyifeng.com/blog/2016/03/systemd-tutorial-commands.html" target="_blank" rel="external">http://www.ruanyifeng.com/blog/2016/03/systemd-tutorial-commands.html</a><br><a href="http://www.ruanyifeng.com/blog/2016/02/linux-daemon.html" target="_blank" rel="external">http://www.ruanyifeng.com/blog/2016/02/linux-daemon.html</a></p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h1 id=&quot;PID-1&quot;&gt;&lt;a href=&quot;#PID-1&quot; class=&quot;headerlink&quot; title=&quot;PID 1&quot;&gt;&lt;/a&gt;PID 1&lt;/h1&gt;&lt;p&gt;上篇说到加载完 kernel 后会 init 用户态第一个进程，PID 1，又叫超级进程，也叫根进程，它负责产生其他
+    
+    </summary>
+    
+    
+      <category term="systemd" scheme="http://0xff00.com/tags/systemd/"/>
+    
+  </entry>
   
   <entry>
     <title>Linux 启动流程（上篇）</title>
