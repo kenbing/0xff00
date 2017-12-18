@@ -2,9 +2,23 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://0xff00.com/2017/12/10/mysql-lock-modes/</loc>
+    
+    <lastmod>2017-12-18T05:09:26.827Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://0xff00.com/2017/11/28/linux-startup-2/</loc>
     
-    <lastmod>2017-11-28T15:56:10.184Z</lastmod>
+    <lastmod>2017-12-14T15:50:17.824Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://0xff00.com/2017/10/09/linux-startup-1/</loc>
+    
+    <lastmod>2017-12-14T15:49:04.860Z</lastmod>
     
   </url>
   
@@ -19,13 +33,6 @@
     <loc>http://0xff00.com/2017/09/15/hyperloglog/</loc>
     
     <lastmod>2017-10-11T12:29:22.680Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://0xff00.com/2017/10/09/linux-startup-1/</loc>
-    
-    <lastmod>2017-10-09T02:49:10.417Z</lastmod>
     
   </url>
   

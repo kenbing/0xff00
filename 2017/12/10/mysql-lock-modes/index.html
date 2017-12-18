@@ -1,0 +1,299 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> MySQL 锁模型 · 0xff00</title><meta name="description" content="MySQL 锁模型 - kenbing"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://0xff00.com/atom.xml" title="0xff00"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="/2016/12/30/about-me/" target="_self" class="nav-list-link">ABOUT</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">MySQL 锁模型</h1><div class="post-info">Dec 10, 2017</div><div class="post-content"><h1 id="前言：何为锁？"><a href="#前言：何为锁？" class="headerlink" title="前言：何为锁？"></a>前言：何为锁？</h1><blockquote>
+<p>锁是计算机协调多个进程或线程并发访问某一资源的机制</p>
+</blockquote>
+<p>像 CPU, 内存, I/O 这些都是资源，在现在这种多用户的操作系统中，都会被共享到，那势必涉及到用锁来协调。</p>
+<p>区别于上述的物理硬件，数据亦是一种共享资源，同样需要通过锁来解决多用户，并发访问的问题，而数据库这样的应用恰恰帮我们用锁来实现上面的问题。</p>
+<p>不难发现，想避免数据竞争，加锁实现串行化，一个个去操作数据是最好的方法，但是这样相当于就没有了并发，是要数据安全，还是要并发性能，这又是一个计算机领域的难题。</p>
+<h1 id="MySQL-锁机制"><a href="#MySQL-锁机制" class="headerlink" title="MySQL 锁机制"></a>MySQL 锁机制</h1><p>这里以 MySQL 为例（因为我只接触过它:P），先大致了解下锁的种类，后面再看如何解决数据安全跟性能之间的权衡。</p>
+<p>按锁定的数据范围，MySQL 的锁可分为：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">范围</th>
+<th style="text-align:center">粒度</th>
+<th style="text-align:center">开销</th>
+<th style="text-align:center">加锁速度</th>
+<th style="text-align:center">锁冲突概率</th>
+<th style="text-align:center">死锁</th>
+<th style="text-align:center">并发</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">表级</td>
+<td style="text-align:center">大</td>
+<td style="text-align:center">小</td>
+<td style="text-align:center">快</td>
+<td style="text-align:center">高</td>
+<td style="text-align:center">没有</td>
+<td style="text-align:center">最低</td>
+</tr>
+<tr>
+<td style="text-align:center">页级</td>
+<td style="text-align:center">中</td>
+<td style="text-align:center">中</td>
+<td style="text-align:center">中</td>
+<td style="text-align:center">中</td>
+<td style="text-align:center">存在</td>
+<td style="text-align:center">一般</td>
+</tr>
+<tr>
+<td style="text-align:center">行级</td>
+<td style="text-align:center">小</td>
+<td style="text-align:center">大</td>
+<td style="text-align:center">慢</td>
+<td style="text-align:center">低</td>
+<td style="text-align:center">存在</td>
+<td style="text-align:center">最高</td>
+</tr>
+</tbody>
+</table>
+<p>我个人还有三个小疑问：</p>
+<ol>
+<li>MySQL 不是号称实现了锁机制，为何还要开发人员去管理锁？</li>
+<li>如果开发人员对操作加锁，该加什么类型的锁？</li>
+<li>加锁的数据范围及时间范围又该怎么定夺？</li>
+</ol>
+<h1 id="MyISAM-和表锁"><a href="#MyISAM-和表锁" class="headerlink" title="MyISAM 和表锁"></a>MyISAM 和表锁</h1><p>表锁分为两种：</p>
+<ol>
+<li>Table Read Lock</li>
+<li>Table Write Lock</li>
+</ol>
+<h2 id="锁定关系"><a href="#锁定关系" class="headerlink" title="锁定关系"></a>锁定关系</h2><table>
+<thead>
+<tr>
+<th style="text-align:center">锁定关系</th>
+<th style="text-align:center">Read Lock</th>
+<th style="text-align:center">Write Lock</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">Read Lock</td>
+<td style="text-align:center">并行</td>
+<td style="text-align:center">互斥</td>
+</tr>
+<tr>
+<td style="text-align:center">Write Lock</td>
+<td style="text-align:center">互斥</td>
+<td style="text-align:center">互斥</td>
+</tr>
+</tbody>
+</table>
+<p>简单说，除了读读是并发的，其他锁组合都是串行，需要等待上一个锁释放才能进行上锁。</p>
+<h2 id="如何上锁"><a href="#如何上锁" class="headerlink" title="如何上锁"></a>如何上锁</h2><p>MyISAM 会自动操作上锁（隐式）</p>
+<ol>
+<li>SELECT 自动加 Read Lock</li>
+<li>UPDATE/INSERT/DELETE 自动加 Write Lock</li>
+</ol>
+<p>那为何还要用语句 LOCK TABLE （显式）加锁呢？无非是为了模拟事务，MyISAM 是不支持事务的。</p>
+<blockquote>
+<p>事务是由<strong>一组 SQL 语句</strong>组成的逻辑处理单元，事务具有4属性，通常称为事务的ACID属性。</p>
+</blockquote>
+<p>因为事务一组 SQL 语句可能涉及多表，所以语句级别的隐式锁定不能满足，必须显式地 LOCK TABLE，例如有 orders 及 products 两张表，里面的 SUM(price) 正常情况下是一致的。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">SELECT</span> <span class="keyword">SUM</span>(price) <span class="keyword">FROM</span> <span class="keyword">order</span>;</div><div class="line"><span class="keyword">SELECT</span> <span class="keyword">SUM</span>(price) <span class="keyword">FROM</span> product;</div></pre></td></tr></table></figure>
+<p>但如果不 LOCK TABLE，可能你读出 orders 的 SUM(price) 时，products 的 SUM(price) 已经改变了，可见 LOCK TABLE 在这种场景下是必要的。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">LOCK</span> <span class="keyword">tables</span> orders <span class="keyword">read</span> <span class="keyword">local</span>, products <span class="keyword">read</span> <span class="keyword">local</span>;</div><div class="line"><span class="keyword">SELECT</span> <span class="keyword">SUM</span>(price) <span class="keyword">FROM</span> <span class="keyword">order</span>;</div><div class="line"><span class="keyword">SELECT</span> <span class="keyword">SUM</span>(price) <span class="keyword">FROM</span> product;</div><div class="line"><span class="keyword">Unlock</span> <span class="keyword">tables</span>;</div></pre></td></tr></table></figure>
+<p>特别强调：</p>
+<ol>
+<li>local 是一个 LOCK TABLE 的一个选项，作用就是在满足 MyISAM 并发插入条件的情况下，允许其他用户在<strong>表尾插入记录</strong></li>
+<li>LOCK TABLE 要一次性 LOCK 住所有要操作的表，不能访问其他一切表，如果加的是读锁，就只能执行读，而不能执行写，写锁同理</li>
+<li>其他 Session 对表的锁定关系不变</li>
+</ol>
+<h2 id="锁并发"><a href="#锁并发" class="headerlink" title="锁并发"></a>锁并发</h2><p>在一定的条件下，MyISAM 也支持 r/w 并发，涉及到一个引擎的系统参数 (concurrent_insert)，这里不展开讲了，有兴趣自己去查文档。</p>
+<h2 id="锁调度"><a href="#锁调度" class="headerlink" title="锁调度"></a>锁调度</h2><p>上面已经讲了锁定关系，读写锁是互斥的，串行的，那是不是按照先来后到的顺序？并不是！写锁的优先级要远远高过读锁！申请写锁的进程会优先上锁，这也正是 MyISAM 不太适合于有大量更新操作和查询操作应用的原因，大量的更新操作会造成查询操作很难获得读锁，读操作可能永远阻塞。</p>
+<p>好在有两个系统参数可以调整读锁的优先级，这里不展开讲了，有兴趣自己去查文档。</p>
+<ol>
+<li>low-priority-updates</li>
+<li>max_write_lock_count</li>
+</ol>
+<p>特别强调：</p>
+<ol>
+<li>避免时间长的查询语句，这样可以避免锁冲突，减少其他进程超时的情况</li>
+<li>如果无法避免，就在低峰期进行操作，例如统计报表数据可放在深夜去跑</li>
+</ol>
+<h1 id="InnoDB-和行锁"><a href="#InnoDB-和行锁" class="headerlink" title="InnoDB 和行锁"></a>InnoDB 和行锁</h1><p>InnoDB 相比 MyISAM 最大的不同是：</p>
+<ol>
+<li>支持行锁</li>
+<li>支持事务</li>
+</ol>
+<p>先说事务，上面已经提到了事务具备 ACID 属性，这几个属性势必跟并发性能是想冲突的，如果是表锁实现的事务，其实还是把事务变成串行事务，可想而知并发性能是非常之低，那么 InnoDB 是如何去权衡这两者的关系？</p>
+<h2 id="事务隔离级别"><a href="#事务隔离级别" class="headerlink" title="事务隔离级别"></a>事务隔离级别</h2><p>为了解决“隔离”与“并发”的矛盾，ISO/ANSI SQL92 定义了４个事务隔离级别：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">隔离级别/并发副作用</th>
+<th style="text-align:center">读取一致性</th>
+<th style="text-align:center">脏读</th>
+<th style="text-align:center">不可重复读</th>
+<th style="text-align:center">幻读</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">Read Uncommited</td>
+<td style="text-align:center">只能保证读取物理数据正确</td>
+<td style="text-align:center">存在</td>
+<td style="text-align:center">存在</td>
+<td style="text-align:center">存在</td>
+</tr>
+<tr>
+<td style="text-align:center">Read Commited</td>
+<td style="text-align:center">语句级别</td>
+<td style="text-align:center">没有</td>
+<td style="text-align:center">存在</td>
+<td style="text-align:center">存在</td>
+</tr>
+<tr>
+<td style="text-align:center">Repeatable Read</td>
+<td style="text-align:center">事务级别</td>
+<td style="text-align:center">没有</td>
+<td style="text-align:center">没有</td>
+<td style="text-align:center">存在</td>
+</tr>
+<tr>
+<td style="text-align:center">Serializable</td>
+<td style="text-align:center">事务级别</td>
+<td style="text-align:center">没有</td>
+<td style="text-align:center">没有</td>
+<td style="text-align:center">没有</td>
+</tr>
+</tbody>
+</table>
+<p>隔离级别及对应的副作用<a href="http://www.jianshu.com/p/4e3edbedb9a8" target="_blank" rel="external">这篇文章</a>写得非常浅显易懂，这里就不作展开，就看他这篇即可。</p>
+<p>其中，Serializable 也就是表级的串行，隔离级别最高，基本没有并发可言，而 Read Uncommited 根本不适用数据库这样的有一致性要求的场景，也基本用不到，本文不对这两种隔离级别进行讨论，主要针对 Read Commited 和 Repeatable Read 两个隔离等级进行讨论。当然还是那句老话，具体选用哪个隔离级别要结合你的应用场景！</p>
+<p>为了实现上面的事务隔离级别，InnoDB 提供了四种行锁来实现：</p>
+<ol>
+<li>共享锁（S）</li>
+<li>排它锁（X）</li>
+<li>意向共享锁（IS）</li>
+<li>意向排它锁（IX）</li>
+</ol>
+<h2 id="锁定关系-1"><a href="#锁定关系-1" class="headerlink" title="锁定关系"></a>锁定关系</h2><table>
+<thead>
+<tr>
+<th style="text-align:center">锁定关系</th>
+<th style="text-align:center">S</th>
+<th style="text-align:center">X</th>
+<th style="text-align:center">IS</th>
+<th style="text-align:center">IX</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">S</td>
+<td style="text-align:center">并行</td>
+<td style="text-align:center">互斥</td>
+<td style="text-align:center">并行</td>
+<td style="text-align:center">互斥</td>
+</tr>
+<tr>
+<td style="text-align:center">X</td>
+<td style="text-align:center">互斥</td>
+<td style="text-align:center">互斥</td>
+<td style="text-align:center">互斥</td>
+<td style="text-align:center">互斥</td>
+</tr>
+<tr>
+<td style="text-align:center">IS</td>
+<td style="text-align:center">并行</td>
+<td style="text-align:center">互斥</td>
+<td style="text-align:center">并行</td>
+<td style="text-align:center">并行</td>
+</tr>
+<tr>
+<td style="text-align:center">IX</td>
+<td style="text-align:center">互斥</td>
+<td style="text-align:center">互斥</td>
+<td style="text-align:center">并行</td>
+<td style="text-align:center">并行</td>
+</tr>
+</tbody>
+</table>
+<p>同样，InnoDB 也是自动加锁，但也可以显式地加锁</p>
+<ol>
+<li>共享锁（S）：WHERE … LOCK IN SHARE MODE</li>
+<li>排它锁（X）：WHERE … FOR UPDATE</li>
+</ol>
+<p>很多人容易搞混不可重复读和幻读，确实这两者有些相似：</p>
+<ul>
+<li>不可重复读在于 UPDATE 和 DELETE</li>
+<li>幻读在于 INSERT。</li>
+</ul>
+<p>如果使用锁机制来实现这两种隔离级别，在可重复读中，该 SQL 第一次读取到数据后，就将这些数据加锁，其它事务无法修改这些数据，就可以实现可重复读了。但这种方法却无法锁住 INSERT 的数据，所以当事务A先前读取了数据，或者修改了全部数据，事务B还是可以 INSERT 数据提交，这时事务A就会发现莫名其妙多了一条之前没有的数据，这就是幻读，不能通过行锁来避免。需要 Serializable 隔离级别 ，读用读锁，写用写锁，读锁和写锁互斥，这么做可以有效的避免幻读、不可重复读、脏读等问题，但会极大的降低数据库的并发能力。</p>
+<p>所以说不可重复读和幻读最大的区别，就在于如何通过锁机制来解决他们产生的问题。上文说的，是使用悲观锁机制来处理这两种问题，MySQL 出于性能考虑，使用了以乐观锁为理论基础的 MVCC（多版本并发控制）来避免这两种问题。</p>
+<h2 id="MVCC"><a href="#MVCC" class="headerlink" title="MVCC"></a>MVCC</h2><p>人们一般把基于锁的并发控制机制称成为悲观机制，而把 MVCC 机制称为乐观机制。这是因为锁机制是一种预防性的，读会阻塞写，写也会阻塞读，当锁定粒度较大，时间较长时并发性能就不会太好；而MVCC是一种后验性的，读不阻塞写，写也不阻塞读，等到提交的时候才检验是否有冲突，由于没有锁，所以读写不会相互阻塞，从而大大提升了并发性能。</p>
+<p><strong> 声明一点：Multi-Version Concurrency Control 是一种无锁事务机制，而不是一种具体的实现。 </strong></p>
+<p>这里讨论的是 InnoDB 对 MVCC 的实现：</p>
+<ul>
+<li>SELECT时，读取创建版本号 &lt;= 当前事务版本号，删除版本号为空或 &gt; 当前事务版本号</li>
+<li>INSERT时，保存当前事务版本号为行的创建版本号</li>
+<li>DELETE时，保存当前事务版本号为行的删除版本号</li>
+<li>UPDATE时，插入一条新纪录，保存当前事务版本号为行创建版本号，同时保存当前事务版本号到原来删除的行</li>
+</ul>
+<p>这样读不阻塞写，写不阻塞读，并发自然就高了，当然也取决与资源读写竞争频率，如果是高频数据，那势必会导致很多重试，万一重拾的成本非常高，那还不如用锁机制去实现。</p>
+<p>首先看下 MVCC 引入的两种读：</p>
+<ul>
+<li><p>snapshot read (快照读): 顾名思义读取的是数据的某个历史版本，有可能不是最新的</p>
+<ol>
+<li>select * from table … ;</li>
+</ol>
+</li>
+<li><p>current read (当前读): 读取的是最新的数据，在 MVCC 中需要显式去加锁</p>
+<ol>
+<li>select * from table … lock in share mode;</li>
+<li>select * from table … for update;</li>
+<li>insert/update/delete;</li>
+</ol>
+</li>
+</ul>
+<p>这里有个疑问，为何 insert/update/delete 这类写操作也归类为当前读？那是因为在 MySQL 内部，一个写操作都是需要<strong>先读取记录</strong>，再对这些记录进行操作。</p>
+<p>对于读操作（快照读)：</p>
+<p>RC 级别，读取的是 fresh snapshot，也就是最新的数据版本，确实存在重复读的情况。<br>RR 级别，但读取的是某个版本的 snapshot (事务中第一个读取语句发生那一刻的 snapshot)，由于历史数据是按版本为单位的，所以快照读是不存在幻读的。</p>
+<p>对于写操作（当前读）：</p>
+<p>回到事务隔离级别的概念上，定义中带来的副作用指的是当前读下产生的，跟 MVCC 引入的快照读不能一概而谈，当前读的隔离性必须得通过上锁来实现，而此时单单行锁是满足不了需求的，InnoDB 实现了一个叫 Next-Key 的锁来保障 RR 级别不会幻读。</p>
+<p><strong>所以 InnoDB 的 RR 隔离级别是消除了幻读吗？怎么跟 ISO 的说法不一样，当然了，标准是标准，具体实现又是另一回事，这里有篇很有意思的<a href="文章">https://github.com/Yhzhtk/note/issues/42</a>记录了这一个问题，强烈推荐看一下！</strong></p>
+<h2 id="Next-Key-Lock"><a href="#Next-Key-Lock" class="headerlink" title="Next-Key Lock"></a>Next-Key Lock</h2><p>Next-Key Lock = X Lock + Gap Lock</p>
+<p>RC 级别，当前读会对数据加 X Lock，存在幻读。<br>RR 级别，当前读会对记录加 X Lock，同时保证对读取的范围加 Gap Lock，新的满足查询条件的记录不能够插入，不存在幻读现象。</p>
+<p>再详细说明一下 Next-Key 是避免 RR 的幻读，我们知道 Record Lock 只能锁定到当前的记录，如果其他事务 Insert 了数据，就会造成幻读</p>
+<p>方法一：加表锁，锁住其他事务不给 Insert （相当变为 Serialazable 级别，抛弃）</p>
+<p>方法二：</p>
+<p><strong>Where 条件走普通索引的情况</strong></p>
+<p><img src="next-key.jpg" alt="next-key"></p>
+<ol>
+<li>如图所示先定位到索引的记录，加上 X 锁</li>
+<li>再把索引记录两边的间隙分别加上 Gap 锁</li>
+<li>再由索引定位到主键记录，再加上 X 锁</li>
+</ol>
+<p><strong>WHERE 条件走 Primary Key/Unique Key 的情况</strong></p>
+<ol>
+<li>由于这两种索引本身保证了Unique，所以新记录插不进去</li>
+<li>所以只需要加上对应记录的 X 锁即可</li>
+</ol>
+<p><strong>WHERE 条件不走任何索引</strong></p>
+<ol>
+<li>扫全表，在每条主键记录上加上 Gap 锁 </li>
+<li>阻塞所有需要加锁的操作</li>
+<li>当然 MySQL 本身会优化这种情况，对于不满足的记录会提前释放，有兴趣的可以参考这篇<a href="http://hedengcheng.com/?p=220" target="_blank" rel="external">blog</a></li>
+</ol>
+<h1 id="死锁"><a href="#死锁" class="headerlink" title="死锁"></a>死锁</h1><p>占坑，也许新开一篇来探讨…</p>
+<h1 id="MetaData-Lock"><a href="#MetaData-Lock" class="headerlink" title="MetaData Lock"></a>MetaData Lock</h1><p>本文讨论的都是 CURD Data Manipulate Language (DML) 的锁，而对表结构的操作 Data Definition Language (DDL)，MySQL 会加上 MetaData Lock（MDL）。MySQL 5.3 版本后引入了MDL，只有在事务结束后才会释放 MDL，因此在事务提交或回滚前，是无法进行DDL操作的。这里先点一下，下次再写一片慢慢探讨。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>先解答文初我的三个疑问：</p>
+<ol>
+<li>MySQL 实现的是语句级别自动加锁，事务是涉及特定业务的多条语句，所以有自己加锁的需求</li>
+<li>加锁类型也是根据事务要达成的目的，在一致性要求强的情况下可以加X锁，其他情况考虑并发可以加S锁</li>
+<li>手动加锁范围会直到事务结束（不敢确定，因为还没详细了解锁升级的内容）</li>
+</ol>
+<p>简单来说 InnoDB 干了下面几件事：</p>
+<ol>
+<li>为了提高并发性能</li>
+<li>提出了粒度更小的行锁</li>
+<li>提出了基于事务隔离级别来平衡事务的<strong>一致性读</strong></li>
+<li>利用 MVCC 来实现隔离级别中产生的读取副作用</li>
+<li>从而提高了并发性能</li>
+</ol>
+<p>终于对 MySQL 锁机制/事务隔离级别有了个大概的了解，数据一致性及并发始终是一个难题，一个关于权衡的难题，只有深刻认识业务才能作出合适的选型。其中事务级别 RU 及 Serializable 分别是并发及一致性的两个极端，更好地帮我们去理清两个边界，最终权衡出 RC/RR 两个用处比较广泛的事务场景。</p>
+<p>另外关于锁/MVCC，这两者就像是连接数据一致性和并发性能的绳子，特别是 MVCC 让我学习了另一种提升并发性能的方法。</p>
+<p>最后，再称赞下 MySQL 设计的精妙，无论是提出当前读跟快照读，还是违反两段提交的提前 unlock 行数据，都是在整个理论模型上的有效补充。</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="https://coolshell.cn/articles/6790.html" target="_blank" rel="external">https://coolshell.cn/articles/6790.html</a><br><a href="http://blog.csdn.net/chen77716/article/details/6742128" target="_blank" rel="external">http://blog.csdn.net/chen77716/article/details/6742128</a><br><a href="http://blog.csdn.net/zyz511919766/article/details/49450849" target="_blank" rel="external">http://blog.csdn.net/zyz511919766/article/details/49450849</a><br><a href="https://tech.meituan.com/innodb-lock.html" target="_blank" rel="external">https://tech.meituan.com/innodb-lock.html</a><br><a href="http://www.cnblogs.com/chenqionghe/p/4845693.html" target="_blank" rel="external">http://www.cnblogs.com/chenqionghe/p/4845693.html</a><br><a href="http://www.cnblogs.com/renolei/p/5910060.html" target="_blank" rel="external">http://www.cnblogs.com/renolei/p/5910060.html</a><br><a href="http://mysql.taobao.org/monthly/2016/03/10/" target="_blank" rel="external">http://mysql.taobao.org/monthly/2016/03/10/</a><br><a href="http://www.jianshu.com/p/4e3edbedb9a8" target="_blank" rel="external">http://www.jianshu.com/p/4e3edbedb9a8</a><br><a href="https://github.com/Yhzhtk/note/issues/42" target="_blank" rel="external">https://github.com/Yhzhtk/note/issues/42</a></p>
+</div></article></div></main><footer><div class="paginator"><a href="/2017/11/28/linux-startup-2/" class="next">NEXT</a></div><div class="copyright"><p>© 2015 - 2017 <a href="http://0xff00.com">kenbing</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-65933410-1",'auto');ga('send','pageview');</script></body></html>
