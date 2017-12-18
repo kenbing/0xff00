@@ -252,7 +252,7 @@
 <p>RC 级别，读取的是 fresh snapshot，也就是最新的数据版本，确实存在重复读的情况。<br>RR 级别，但读取的是某个版本的 snapshot (事务中第一个读取语句发生那一刻的 snapshot)，由于历史数据是按版本为单位的，所以快照读是不存在幻读的。</p>
 <p>对于写操作（当前读）：</p>
 <p>回到事务隔离级别的概念上，定义中带来的副作用指的是当前读下产生的，跟 MVCC 引入的快照读不能一概而谈，当前读的隔离性必须得通过上锁来实现，而此时单单行锁是满足不了需求的，InnoDB 实现了一个叫 Next-Key 的锁来保障 RR 级别不会幻读。</p>
-<p><strong>所以 InnoDB 的 RR 隔离级别是消除了幻读吗？怎么跟 ISO 的说法不一样，当然了，标准是标准，具体实现又是另一回事，这里有篇<a href="文章">https://github.com/Yhzhtk/note/issues/42</a>有说，很有意思，强烈推荐看一下！</strong></p>
+<p><strong>所以 InnoDB 的 RR 隔离级别是消除了幻读吗？怎么跟 ISO 的说法不一样，当然了，标准是标准，具体实现又是另一回事，这里有篇<a href="https://github.com/Yhzhtk/note/issues/42" target="_blank" rel="external">文章</a>有说，很有意思，强烈推荐看一下！</strong></p>
 <h2 id="Next-Key-Lock"><a href="#Next-Key-Lock" class="headerlink" title="Next-Key Lock"></a>Next-Key Lock</h2><p>Next-Key Lock = X Lock + Gap Lock</p>
 <p>RC 级别，当前读会对数据加 X Lock，存在幻读。<br>RR 级别，当前读会对记录加 X Lock，同时保证对读取的范围加 Gap Lock，新的满足查询条件的记录不能够插入，不存在幻读现象。</p>
 <p>再详细说明一下 Next-Key 是避免 RR 的幻读，我们知道 Record Lock 只能锁定到当前的记录，如果其他事务 Insert 了数据，就会造成幻读</p>
